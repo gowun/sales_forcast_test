@@ -295,3 +295,25 @@ def evaluate_models(log_dir_path):
         lmmodel = Train_MLMModel.load_from_checkpoint(checkpoint_path=v, hparams=args)
         model_result[k] = trainer.test(lmmodel, test_dataloaders=data_module.test_dataloader())
     return model_result
+
+def load_model(log_dir_path, mode='best'):
+    last_version = os.popen(f'ls {log_dir_path}/tb_logs/default/').readlines()[-1][:-1]
+    
+    with open(f'{log_dir_path}/tb_logs/default/{last_version}/hparams.yaml', 'r') as f:
+        hparams = yaml.load(f, Loader=yaml.FullLoader)
+    args = Namespace(**hparams)
+    model_names = os.popen(f'ls {log_dir_path}/model_chp/').readlines()
+    
+    perf_df = pd.read_csv(f'{log_dir_path}/performance_log.txt', sep=',', header=0)
+    perf_pairs = list(perf_df.loc[perf_df['epoch'] > -1].values)
+    if mode == 'best':
+        epoch = sorted(perf_pairs, key=lambda x: x[1])[0][0]
+    elif mode == 'last':
+        epoch = perf_pairs[-1][0]
+    matched = list(filter(lambda x: x.startswith('epoch={0:02d}'.format(int(epoch))), model_names))
+    if len(matched) == 1:
+        file_name = f'{log_dir_path}/model_chp/{matched[0][:-1]}'
+        print(file_name)
+        return Train_MLMModel.load_from_checkpoint(checkpoint_path=file_name, hparams=args)
+    else:
+        return None
