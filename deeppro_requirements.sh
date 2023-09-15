@@ -22,6 +22,7 @@ pip install Werkzeug==2.0.3 --user
 pip install skt==0.2.87
 pip install datasets
 pip install datasets==13.0.0
+pip install numpy==1.20.0
 #sudo pip install google-api-python-client
 #sudo pip install google_auth_httplib2
 
